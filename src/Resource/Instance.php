@@ -6,7 +6,7 @@ use Phediverse\MastodonRest\Exception\ResolveException;
 
 class Instance
 {
-    use PromiseTrait;
+    use ResourceTrait;
 
     protected $name;
     protected $hostname;
