@@ -1,0 +1,21 @@
+{
+    "name": "phediverse/mastodon-rest",
+    "type": "library",
+    "description": "Mastodon API REST client",
+    "require": {
+        "php": "^7.0",
+        "guzzlehttp/guzzle": "^6.2"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Ian Littman",
+            "email": "iansltx@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Phediverse\\MastodonRest\\": "src/"
+        }
+    }
+}
