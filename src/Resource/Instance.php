@@ -4,10 +4,8 @@ namespace Phediverse\MastodonRest\Resource;
 
 use Phediverse\MastodonRest\Exception\ResolveException;
 
-class Instance
+class Instance extends BaseResource
 {
-    use ResourceTrait;
-
     protected $name;
     protected $hostname;
     protected $description;
@@ -35,7 +33,7 @@ class Instance
         return $this->resolve()->email;
     }
 
-    public function allowsDirectPosts() : bool
+    public function supportsDirectPosts() : bool
     {
         return $this->isMastodon();
     }
@@ -63,5 +61,15 @@ class Instance
         $this->email = $data['email'];
 
         return $this;
+    }
+
+    protected function toArray() : array
+    {
+        return [
+            'title' => $this->name,
+            'description' => $this->description,
+            'uri' => $this->hostname,
+            'email' => $this->email
+        ];
     }
 }

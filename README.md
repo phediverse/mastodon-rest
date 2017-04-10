@@ -127,8 +127,33 @@ Now that you've got your access token, you can set up the main API client instan
 $client = \Phediverse\MastodonRest\Client::build('social.targaryen.house', $accessToken);
 ```
 
-Unfortunately, nothing's quite implemented yet in the API client that requires such authentication, but that'll change
-soon enough. Watch this space!
+Let's start by getting your own account's display name:
+
+```php
+$account = $client->getAccount(/* defaults to your ID; can put someone else's ID in here too */);
+echo $account->getDisplayName(); // Your Display Name
+```
+
+Resources can also reference other resources directly, e.g.
+
+```php
+$instance = $account->getInstance(); // Instance resource
+```
+
+You can also serialize a resource, to either JSON or PHP (which uses a tweaked version of the JSON representation
+under the hood), and use the client object to bring the resource back from its serialized form. note that
+serializing a resource will force it to finish downloading (see **The Turbo Button** for more info on that). The
+client will inject itself on deserialization, so pulling related resources will work at that point.
+
+I also try to follow the original API response format pretty closely on the JSON side, so JSON-encoding a resource
+will get you something very similar (same key names etc.) to what the Mastodon API spits out.
+
+```php
+$serializedAccount = json_encode($accout);
+
+$deserializedAccount = $client->deserialize($serializedAccount);
+echo $deserializedAccount->getId(); // your ID
+```
 
 Unauthenticated Endpoints
 -------------------------
@@ -143,7 +168,7 @@ $hosts = ['mastodon.xyz', 'icosahedron.website', 'sealion.club', 'cybre.space', 
 
 /** @var \Phediverse\MastodonRest\Resource\Instance[] $instances */
 $instances = array_map(function($host) use ($client) { // requests are started here, in parallel!
-    return $client->getInstanceInfo($host);
+    return $client->getInstance($host);
 }, array_combine($hosts, $hosts));
 
 foreach ($instances as $hostname => $instance) { // everything in this loop will finish around the same time
@@ -151,11 +176,13 @@ foreach ($instances as $hostname => $instance) { // everything in this loop will
 }
 
 // we can also pull the name for the host we specified in client setup, as it's the default
-echo "Default client: " . $client->getInstanceInfo()->getName() . "\n";
+echo "Default client: " . $client->getInstance()->getName() . "\n";
 ```
 
 The Turbo Button
 ----------------
+
+### Parallel Requests
 
 Under the hood, the client tries to block as little as possible, only forcing resolution of an HTTP request (well, 
 HTTPS...that's the default if you don't specify scheme in a hostname) when you ask for something that requires an
@@ -167,9 +194,25 @@ I may tweak things further to allow for more direct manipulation of the underlyi
 know when a bunch of requests don't necessarily need to resolve in order, for even more speed. But that's for another
 day.
 
-One catch: the login endpoints, whether for completing an Auth Code grant or for logging in via a username and password,
+Ff you want to force a resource block until fully downloaded, call its `resolve()` method. That method can be chained.
+
+A few catches: 
+
+1. The login endpoints, whether for completing an Auth Code grant or for logging in via a username and password,
 don't do anything asynchronous, since you're getting an access token back. If folks want to async-ify that bit, that
 can be a task for a later date.
+2. Async runs one level deep in most cases at this point; if you request a related resource before the original resource
+loads, you'll block until the original resource load completes. I (or some other contributor) will fix that bit later.
+
+### Caching
+
+The client caches GET requests, including referencing the same resource if multiple requests for the same one are in
+flight, to avoid naive use from pounding the server on the other end. If you need to clear the cache for any reason,
+use `$client->clearCache()` for that; see the code for information on arguments. You can also bypass the cache for a
+request by setting the `$useCache` parameter on `Client` calls to `false`.
+
+Once I add methods for updating a given resource, updates will automatically refresh or remove the associated resource
+in the cache, depending on what can be done without making another request to the server.
 
 Contributing
 ------------

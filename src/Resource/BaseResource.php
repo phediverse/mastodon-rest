@@ -6,7 +6,7 @@ use GuzzleHttp\Promise\PromiseInterface;
 use Psr\Http\Message\ResponseInterface;
 use Phediverse\MastodonRest\Client;
 
-trait ResourceTrait
+abstract class BaseResource implements \Serializable, \JsonSerializable
 {
     use PromiseTrait;
 
@@ -69,5 +69,34 @@ trait ResourceTrait
             throw new \InvalidArgumentException("This method is not available without a client");
         }
         return $this->client;
+    }
+
+    // serialization
+
+    public function jsonSerialize()
+    {
+        $arr = $this->resolve()->toArray();
+
+        unset($arr['client']);
+        unset($arr['promise']);
+
+        $arr['resourceType'] = get_class($this);
+
+        return $arr;
+    }
+
+    abstract protected function toArray() : array;
+
+    public function serialize()
+    {
+        $data = $this->jsonSerialize();
+        unset($data['resourceType']);
+        return json_encode($data);
+    }
+
+    public function unserialize($serialized)
+    {
+        $this->promise = true;
+        $this->hydrate(json_decode($serialized, JSON_OBJECT_AS_ARRAY));
     }
 }

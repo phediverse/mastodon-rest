@@ -17,7 +17,7 @@ trait PromiseTrait
      * @param ResponseInterface|null $response
      * @return $this
      */
-    protected function resolve(ResponseInterface $response = null)
+    public function resolve(ResponseInterface $response = null)
     {
         if ($this->promise === true) {
             return $this;
