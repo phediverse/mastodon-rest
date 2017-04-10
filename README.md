@@ -194,7 +194,7 @@ I may tweak things further to allow for more direct manipulation of the underlyi
 know when a bunch of requests don't necessarily need to resolve in order, for even more speed. But that's for another
 day.
 
-Ff you want to force a resource block until fully downloaded, call its `resolve()` method. That method can be chained.
+If you want to force a resource block until fully downloaded, call its `resolve()` method. That method can be chained.
 
 A few catches: 
 
