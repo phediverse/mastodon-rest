@@ -46,7 +46,7 @@ class Account extends BaseResource
     public function isLocal() : bool
     {
         $this->resolve();
-        return $this->username != $this->acct;
+        return $this->username == $this->acct;
     }
 
     public function getAcct() : string
@@ -57,19 +57,6 @@ class Account extends BaseResource
     public function getUsername() : string
     {
         return $this->resolve()->username;
-    }
-
-    /**
-     * @return string the username component of an account name, even if they're on another instance
-     */
-    public function getUnqualifiedAccountName() : string
-    {
-        $this->resolve();
-        if ($this->acct === $this->username) {
-            return $this->username;
-        }
-
-        return substr($this->acct, 0, strrpos($this->acct, '@') - 1);
     }
 
     /**
