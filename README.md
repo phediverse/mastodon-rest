@@ -149,7 +149,7 @@ I also try to follow the original API response format pretty closely on the JSON
 will get you something very similar (same key names etc.) to what the Mastodon API spits out.
 
 ```php
-$serializedAccount = json_encode($accout);
+$serializedAccount = json_encode($account);
 
 $deserializedAccount = $client->deserialize($serializedAccount);
 echo $deserializedAccount->getId(); // your ID
