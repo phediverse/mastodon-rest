@@ -5,6 +5,7 @@ namespace Phediverse\MastodonRest;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Psr7\Request;
 use Phediverse\MastodonRest\Resource\Account;
+use Phediverse\MastodonRest\Resource\Status;
 use Phediverse\MastodonRest\Resource\BaseResource;
 use Phediverse\MastodonRest\Resource\Instance;
 
@@ -114,6 +115,12 @@ class Client
     public function getAccount(int $id = null, bool $useCache = true) : Account
     {
         return $this->get('accounts/' . ($id ?: 'verify_credentials'), Account::class, $useCache);
+    }
+
+    // Status
+    public function getStatus(int $id, bool $useCache = true) : Status
+    {
+        return $this->get('statuses/' . $id, Status::class, $useCache);
     }
 
     /////////////////////////
