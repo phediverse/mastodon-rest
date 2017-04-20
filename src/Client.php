@@ -6,6 +6,7 @@ use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Psr7\Request;
 use Phediverse\MastodonRest\Resource\Account;
 use Phediverse\MastodonRest\Resource\Status;
+use Phediverse\MastodonRest\Resource\Timeline;
 use Phediverse\MastodonRest\Resource\BaseResource;
 use Phediverse\MastodonRest\Resource\Instance;
 
@@ -115,6 +116,16 @@ class Client
     public function getAccount(int $id = null, bool $useCache = true) : Account
     {
         return $this->get('accounts/' . ($id ?: 'verify_credentials'), Account::class, $useCache);
+    }
+
+    // Timeline (useCache = false as default => useless to NOT reload a timeline, right?)
+    public function getTimeline(string $name="home", bool $localOnly=false, string $tag="", bool $useCache = false) : Timeline
+    {
+        static $allowed=array("home","public","tag"); // from API doc
+        if (!in_array($name,$allowed)) throw new \Exception('incorrect name for timeline');
+        if ($name=="tag") $name.="/".$tag;
+        if ($localOnly) $name.="?local";
+        return $this->get('timelines/' . $name, Timeline::class, $useCache);
     }
 
     // Status
