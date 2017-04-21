@@ -62,7 +62,7 @@ Now that you've got your app, you can go through the OAuth2 Authorization Code g
 app out of its configuration JSON, and drop it into an AuthClient instance.
 
 ```php
-$app = \Phediverse\MastodonRest\Resource\Application::fromJson(file_get_contents('instance_creds.json'));
+$app = \Phediverse\MastodonRest\Resource\Application::fromJsonConfig(file_get_contents('instance_creds.json'));
 $authClient = \Phediverse\MastodonRest\Auth\AuthClient::forApplication($app);
 ```
 
@@ -91,7 +91,7 @@ Assuming that you have a redirect landing, there's one more step to get the acce
 
 ```php
 // since we're in a different request than where we started this process...
-$app = \Phediverse\MastodonRest\Resource\Application::fromJson(file_get_contents('instance_creds.json'));
+$app = \Phediverse\MastodonRest\Resource\Application::fromJsonConfig(file_get_contents('instance_creds.json'));
 $authClient = \Phediverse\MastodonRest\Auth\AuthClient::forApplication($app);
 
 // verify state here; it'll be in $_GET['state']
@@ -109,7 +109,7 @@ in, your system, the flow's a bit simpler, and doesn't have to happen across mul
 
 ```php
 // still need your app and an AuthClient
-$app = \Phediverse\MastodonRest\Resource\Application::fromJson(file_get_contents('instance_creds.json'));
+$app = \Phediverse\MastodonRest\Resource\Application::fromJsonConfig(file_get_contents('instance_creds.json'));
 $authClient = \Phediverse\MastodonRest\Auth\AuthClient::forApplication($app);
 
 $accessToken = $authClient->login('your@email.address', 'SuperSecretP4$$w0rd'/*, override scopes here */);
