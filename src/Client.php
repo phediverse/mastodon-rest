@@ -5,6 +5,8 @@ namespace Phediverse\MastodonRest;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Psr7\Request;
 use Phediverse\MastodonRest\Resource\Account;
+use Phediverse\MastodonRest\Resource\Status;
+use Phediverse\MastodonRest\Resource\Timeline;
 use Phediverse\MastodonRest\Resource\BaseResource;
 use Phediverse\MastodonRest\Resource\Instance;
 
@@ -116,6 +118,37 @@ class Client
         return $this->get('accounts/' . ($id ?: 'verify_credentials'), Account::class, $useCache);
     }
 
+    /**
+     * Call the /timelines api endpoint, get latest toots for a user.
+     * @param string $name the name of the timeline to get (home, public, tag)
+     * @param array $params a hash of query string parameters (see _urlParams method)
+     * @param bool $useCache shall we use the caching system or not?
+     * @return Timeline an array of Statuses
+     */
+    public function getTimeline(string $name="home", array $params=null, bool $useCache = false) : Timeline
+    {
+        static $allowed=array("home","public","tag"); // from API doc
+        if (!in_array($name,$allowed)) throw new \Exception('incorrect name for timeline');
+        if ($name=="tag") {
+            if (!isset($params["tag"])) throw new Exception('name=tag requires a "tag" params');
+            $name.="/".$params["tag"];
+        }
+        $name = $this->_urlParams($name,$params);
+        
+        return $this->get('timelines/' . $name, Timeline::class, $useCache);
+    }
+
+    /**
+     * Call the /statuses api endpoint, get a specific status.
+     * @param int $id the local ID of the status to retrieve
+     * @param bool $useCache shall we use the caching system or not?
+     * @return a Status object 
+     */
+    public function getStatus(int $id, bool $useCache = true) : Status
+    {
+        return $this->get('statuses/' . $id, Status::class, $useCache);
+    }
+
     /////////////////////////
     ///                   ///
     ///   CLIENT TOOLS    ///
@@ -191,4 +224,33 @@ class Client
 
         return $item;
     }
+
+    /** 
+     * add query_string parameters to GET urls as per API specs
+     * @param string $name the base url
+     * @param array $params a hash with query strings to add 
+     * @return string $name modified as needed
+     */
+    protected function _urlParams($name, $params) 
+    {
+        $first=true;
+        if (isset($params["local"]) && $params["local"]) {
+            $name.=(($first)?"?":"&")."local=true";
+            $first=false;
+        }
+        if (isset($params["max_id"])) {
+            $name.=(($first)?"?":"&")."max_id=".$params["max_id"];
+            $first=false;
+        }
+        if (isset($params["since_id"])) {
+            $name.=(($first)?"?":"&")."since_id=".$params["since_id"];
+            $first=false;
+        }
+        if (isset($params["limit"])) {
+            $name.=(($first)?"?":"&")."limit=".$params["limit"];
+            $first=false;
+        }
+        return $name;
+    }
+    
 }

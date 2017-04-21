@@ -149,11 +149,35 @@ I also try to follow the original API response format pretty closely on the JSON
 will get you something very similar (same key names etc.) to what the Mastodon API spits out.
 
 ```php
-$serializedAccount = json_encode($accout);
+$serializedAccount = json_encode($account);
 
 $deserializedAccount = $client->deserialize($serializedAccount);
 echo $deserializedAccount->getId(); // your ID
 ```
+
+API Methods
+-----------
+
+You can use the following methods in \Phediverse\MastodonRest\Client to access the Mastodon API:
+
+See Mastodon official API to know which properties has each object: https://github.com/tootsuite/documentation/blob/master/Using-the-API/API.md
+Properties from Mastodon API are converted to camelCase (eg: ```created_at``` become ```createdAt```)
+
+```php
+$account = $client->getAccount(/* defaults to your ID; can put someone else's ID in here too */);
+/* Returns an Account object */
+```
+
+```php
+$status = $client->getStatus(123 /* Status-id from your instance*/);
+/* Returns a Status object */
+```
+
+```php
+$timeline = $client->getTimeline("tag" /* or "public" or "home" */, true /* local only? */, "mastodon" /* for Hashtag timeline request */);
+/* Returns a Timeline object containing an array of Status objects */
+```
+
 
 Unauthenticated Endpoints
 -------------------------
