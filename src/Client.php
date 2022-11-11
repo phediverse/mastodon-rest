@@ -228,11 +228,11 @@ class Client
             // Now all paginated queries are run, let's hydrate objects
             $item = [];
             foreach ($jsonResponse as $index => $jsonObject) {
-                array_push($item, $class::fromData($jsonObject));
+                array_push($item, $class::fromData($jsonObject, $this));
             }
         } else {
             /** @noinspection PhpUndefinedMethodInspection */ // too much dynamic magic for PhpStorm to handle
-            $item = $class::fromPromise($this->http->sendAsync(new Request('GET', $uri, $httpOptions)));
+            $item = $class::fromPromise($this->http->sendAsync(new Request('GET', $uri, $httpOptions)), $this);
         }
 
         if ($useCache && is_array($this->cache)) {
