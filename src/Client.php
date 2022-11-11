@@ -116,6 +116,29 @@ class Client
         return $this->get('accounts/' . ($id ?: 'verify_credentials'), Account::class, $useCache);
     }
 
+    /**
+     * Get the list of accounts followed by the given account id
+     * @param int|Account|null $string the account id. When null, it will use the default account id
+     * @return Account[]
+     */
+    public function getFollowings($id  =null, bool $useCache = true) : array {
+        if($id instanceof Account) {
+            $id = $id->getId();
+        }
+        $uri = 'accounts/' . ($id ?: $this->getAccountId()) . '/following';
+        $class = Account::class . "[]";
+        return $this->get($uri, $class, $useCache);
+    }
+
+    public function getFollowers($id  =null, bool $useCache = true) : array {
+        if($id instanceof Account) {
+            $id = $id->getId();
+        }
+        $uri = 'accounts/' . ($id ?: $this->getAccountId()) . '/followers';
+        $class = Account::class . "[]";
+        return $this->get($uri, $class, $useCache);
+    }
+
     /////////////////////////
     ///                   ///
     ///   CLIENT TOOLS    ///
@@ -173,14 +196,44 @@ class Client
 
     // under-the-hood methods
 
+    /**
+     * Perform the http request, using the cache if needed and with the correct options
+     * @param string $uri the uri we want to query
+     * @param string $class the class to rehydrate
+     * @param bool $useCache set to true if we want to use the cache
+     * @param array $httpOptions the options used to send the request
+     * @return an object of the $class
+     */
     protected function get(string $uri, string $class, bool $useCache = true, array $httpOptions = [])
     {
         if ($useCache && is_array($this->cache) && isset($this->cache[$class][$uri])) {
             return $this->cache[$class][$uri];
         }
 
-        /** @noinspection PhpUndefinedMethodInspection */ // too much dynamic magic for PhpStorm to handle
-        $item = $class::fromPromise($this->http->sendAsync(new Request('GET', $uri, $httpOptions)));
+        $item = null;
+        if (str_ends_with($class, "[]")) {
+            $class = substr($class, 0, strpos($class, "[]"));
+            $array_query = true;
+            // Run query with correct pagination parameters and aggregate all results
+            $jsonResponse = [];
+            // in a funny way, Mastodon sends navigation links not in json response, but as http headers
+            // So we need to have the http library return that
+            while ($uri!=null) {
+                // I don't yet understand how to run request async and analyze headers afterwards
+                $response  = $this->http->request('GET', $uri, $httpOptions);
+                $body = json_decode($response->getBody(), true);
+                $jsonResponse = array_merge($jsonResponse, $body);
+                $uri = $this->getNextPage($response);
+            }
+            // Now all paginated queries are run, let's hydrate objects
+            $item = [];
+            foreach ($jsonResponse as $index => $jsonObject) {
+                array_push($item, $class::fromData($jsonObject, $this));
+            }
+        } else {
+            /** @noinspection PhpUndefinedMethodInspection */ // too much dynamic magic for PhpStorm to handle
+            $item = $class::fromPromise($this->http->sendAsync(new Request('GET', $uri, $httpOptions)), $this);
+        }
 
         if ($useCache && is_array($this->cache)) {
             if (!isset($this->cache[$class])) {
@@ -190,5 +243,23 @@ class Client
         }
 
         return $item;
+    }
+
+    protected function getNextPage($response) : ?string {
+        $linksHeader = $response->getHeader("Link");
+        $linksLine = $linksHeader[0];
+        $parsedLinks = \GuzzleHttp\Psr7\Header::parse($linksLine);
+        $linksDict = [];
+        // The +1 is here to remove the '/' after the prefix
+        $prefix = strlen($this->http->getConfig('base_uri'))+1;
+        foreach ($parsedLinks as $index => $link) {
+            // Don't forget that Guzzle HTTP client has a concept of base path that should be removed from the given urls
+            $linksDict[$link['rel']] = substr($link[0], $prefix, -1);
+        }
+        if(array_key_exists('next', $linksDict)) {
+            return $linksDict['next'];
+        } else {
+            return null;
+        }
     }
 }
