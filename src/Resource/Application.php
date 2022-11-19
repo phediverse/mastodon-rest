@@ -107,7 +107,7 @@ class Application implements \JsonSerializable
         $this->instanceHost = $instanceHost;
     }
 
-    protected function hydrate(array $data) : self
+    public function hydrate(array $data) : self
     {
         $this->clientId = $data['client_id'];
         $this->clientSecret = $data['client_secret'];

@@ -51,7 +51,7 @@ class Instance extends BaseResource
         }
     }
 
-    protected function hydrate(array $data): self
+    public function hydrate(array $data): self
     {
         $this->isMastodon = true;
 
