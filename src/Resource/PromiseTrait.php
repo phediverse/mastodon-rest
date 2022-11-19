@@ -51,5 +51,5 @@ trait PromiseTrait
      * @param array $data
      * @return $this
      */
-    abstract protected function hydrate(array $data);
+    abstract public function hydrate(array $data);
 }

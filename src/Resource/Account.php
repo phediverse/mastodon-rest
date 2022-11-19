@@ -172,7 +172,7 @@ class Account extends BaseResource
      * @param array $data
      * @return $this
      */
-    protected function hydrate(array $data)
+    public function hydrate(array $data)
     {
         $this->id = $data['id'];
 
